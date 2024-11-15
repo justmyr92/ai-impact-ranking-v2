@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import QuestionGrid from "../../components/QuestionGrid";
 import BarChartHero from "../../components/BarChartHero";
 import { useNavigate } from "react-router-dom";
+import Notifications from "../../components/NotificationsDropdown";
 
 const FileRanking = () => {
     const [sdgData, setSdgData] = useState([]);
@@ -160,6 +161,7 @@ const FileRanking = () => {
             <main className="h-full w-[80%] border overflow-auto px-4">
                 <div className="header py-5 px-7 flex justify-between items-center">
                     <h1 className="text-2xl text-gray-900">Record Tracks</h1>
+                    {localStorage.getItem("role") === "0" && <Notifications />}
                 </div>
                 <hr />
                 <div className="py-5 px-7">

@@ -11,6 +11,7 @@ import CSDRecordPage from "./pages/(csd)/CSDRecordPage";
 import FIleRanking from "./pages/(csd)/FIleRanking";
 import EditInstrument from "./pages/(csd)/EditInstrument";
 import AnnualReportPage from "./pages/(sd)/AnnualReportPage";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
     return (
@@ -54,6 +55,7 @@ function App() {
                     path="/csd/edit-instrument/:instrument_id"
                     element={<EditInstrument />}
                 />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
             </Routes>
         </BrowserRouter>
     );

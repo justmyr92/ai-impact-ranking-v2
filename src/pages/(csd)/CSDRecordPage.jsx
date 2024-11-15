@@ -6,6 +6,7 @@ import ViewRecords from "../../components/ViewRecords";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import Notifications from "../../components/NotificationsDropdown";
 
 const CSDRecordPage = () => {
     const [selectedYear, setSelectedYear] = useState("2023");
@@ -163,6 +164,7 @@ const CSDRecordPage = () => {
                         <FontAwesomeIcon icon={faList} className="mr-2" />
                         Record
                     </h1>
+                    {localStorage.getItem("role") === "0" && <Notifications />}
                 </div>
                 <hr />
                 <div className="py-5 px-7">

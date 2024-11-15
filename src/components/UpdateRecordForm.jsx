@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import excelFormula from "excel-formula";
 
-const UpdateRecordForm = ({ selectedSdg, selectedYear, recordId }) => {
+const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
     const [instruments, setInstruments] = useState([]);
     const [answers, setAnswers] = useState([]);
     const [error, setError] = useState("");
@@ -329,7 +329,9 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, recordId }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
+            // Update answers in bulk using map and fetch
             const updatePromises = answers.map(async (answer) => {
                 const response = await fetch(
                     "http://localhost:9000/api/update/answers",
@@ -344,7 +346,7 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, recordId }) => {
 
                 if (!response.ok) {
                     throw new Error(
-                        `Error: ${response.status} ${response.statusText}`
+                        `Error updating answer: ${response.status} ${response.statusText}`
                     );
                 }
 
@@ -354,9 +356,70 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, recordId }) => {
             // Wait for all updates to complete
             const updatedAnswers = await Promise.all(updatePromises);
             console.log("Updated answers:", updatedAnswers);
-            // Handle the updated answers as needed (e.g., updating local state)
+
+            // Send email notification
+            try {
+                await emailjs.send(
+                    "service_84tcmsn",
+                    "template_oj00ezl",
+                    {
+                        to_email: "justmyrgutierrez92@gmail.com",
+                        subject: "Record Submission Notification",
+                        message: `
+                            ==============================
+                            RECORD SUBMISSION NOTIFICATION
+                            ==============================
+    
+                            Hello,
+    
+                            A new record has been successfully submitted by ${userName}.
+    
+                            Record Details:
+                            ---------------
+                            - Record ID: ${recordID}
+    
+                            Thank you,
+                            SDO
+                        `,
+                    },
+                    "F6fJuRNFyTkkvDqbm"
+                );
+                console.log("Email sent successfully.");
+            } catch (emailError) {
+                console.error("Error sending email:", emailError);
+            }
+
+            // Proceed to send answers using the record_id
+            const res = await sendAnswers(record.record_id);
+            if (!res) throw new Error("Failed to send answers.");
+
+            const notificationMessage = `
+                New record submission:
+                - Record ID: ${recordID}
+                - Submitted by: ${userName}
+            `;
+
+            // Send a notification about the new record submission
+            const notifResponse = await fetch(
+                "http://localhost:9000/api/create-notification",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: localStorage.getItem("user_id"), // User ID from localStorage
+                        notificationMessage,
+                    }),
+                }
+            );
+
+            if (!notifResponse.ok) {
+                throw new Error("Failed to create notification.");
+            }
+
+            console.log("Notification sent successfully.");
+            window.location.reload(); // Reload page after successful submission
         } catch (error) {
-            console.error("Error updating answers:", error);
+            console.error("Error during submission:", error);
         }
     };
 

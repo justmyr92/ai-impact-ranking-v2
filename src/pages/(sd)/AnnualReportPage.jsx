@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
+import Notifications from "../../components/NotificationsDropdown";
 
 const AnnualReportPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,15 +87,21 @@ const AnnualReportPage = () => {
                 <div className="header py-5 px-7 flex justify-between items-center">
                     <h1 className="text-2xl text-gray-900">Annual Report</h1>
 
-                    {/* Button to open modal */}
-                    {localStorage.getItem("role") === "0" && (
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded"
-                        >
-                            Upload Annual Report
-                        </button>
-                    )}
+                    <div className="flex gap-2">
+                        {localStorage.getItem("role") === "0" && (
+                            <Notifications />
+                        )}
+
+                        {/* Button to open modal */}
+                        {localStorage.getItem("role") === "0" && (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                                Upload Annual Report
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <hr />
 

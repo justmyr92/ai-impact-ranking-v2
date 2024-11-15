@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-regular-svg-icons";
 import { getInstruments } from "../../services/service"; // Import your service for fetching instruments
 import { Link, useNavigate } from "react-router-dom";
+import Notifications from "../../components/NotificationsDropdown";
 
 const InstrumentsPage = () => {
     const [instruments, setInstruments] = useState([]);
@@ -188,15 +189,20 @@ const InstrumentsPage = () => {
             <main className="h-full w-[80%] border overflow-auto">
                 <div className="header py-5 px-7 flex justify-between items-center">
                     <h1 className="text-2xl text-gray-900">Instruments</h1>
-                    {userRole.toString() === "0" && ( // Check if the user role is '0'
-                        <Link
-                            to="/csd/add-instrument"
-                            className="bg-blue-600 text-white text-base px-6 py-2"
-                        >
-                            <FontAwesomeIcon icon={faSquarePlus} /> Add New
-                            Instrument
-                        </Link>
-                    )}
+                    <div className="flex gap-2">
+                        {localStorage.getItem("role") === "0" && (
+                            <Notifications />
+                        )}
+                        {userRole.toString() === "0" && ( // Check if the user role is '0'
+                            <Link
+                                to="/csd/add-instrument"
+                                className="bg-blue-600 text-white text-base px-6 py-2"
+                            >
+                                <FontAwesomeIcon icon={faSquarePlus} /> Add New
+                                Instrument
+                            </Link>
+                        )}
+                    </div>
                 </div>
                 <hr />
                 <div className="py-5 px-7">
@@ -208,6 +214,7 @@ const InstrumentsPage = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             value={searchQuery}
                         />
+
                         <select
                             className="form__input border block w-[16rem] px-6 py-3 rounded-md shadow-sm sm:text-sm focus:outline-none ml-4"
                             value={selectedSdg}

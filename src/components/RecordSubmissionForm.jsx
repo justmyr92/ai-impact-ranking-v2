@@ -452,6 +452,7 @@ const RecordSubmissionForm = ({ selectedSdg, selectedYear, userId }) => {
             if (!(await uploadFile(record.record_id))) {
                 return; // Stop if file upload fails
             }
+            const userName = localStorage.getItem("name"); // Retrieve the name from localStorage
 
             const recordID = record.record_id;
 
@@ -469,7 +470,7 @@ const RecordSubmissionForm = ({ selectedSdg, selectedYear, userId }) => {
 
                                     Hello,
 
-                                    A new record has been successfully submitted.
+                                    A new record has been successfully submitted by ${userName}.
 
                                     Record Details:
                                     ---------------
@@ -489,6 +490,29 @@ const RecordSubmissionForm = ({ selectedSdg, selectedYear, userId }) => {
             // Proceed to send answers using the record_id
             const res = await sendAnswers(record.record_id);
             if (res) {
+                const notificationMessage = `
+                New record submission:
+                - Record ID: ${recordID}
+                - Submitted by: ${userName}
+            `;
+
+                // Send a request to insert the notification
+                const notifResponse = await fetch(
+                    "http://localhost:9000/api/create-notification",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            userId: localStorage.getItem("user_id"), // User ID from localStorage
+                            notificationMessage,
+                        }),
+                    }
+                );
+
+                if (!notifResponse.ok)
+                    throw new Error("Failed to create notification");
+
+                console.log("Notification sent successfully");
                 window.location.reload();
             }
             console.log("All answers submitted successfully.");

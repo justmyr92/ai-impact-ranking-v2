@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Groq from "groq-sdk";
 import Sidebar from "../../components/Sidebar";
 import ScorePerCampusChart from "../../components/ScorePerCampusChart";
 import BatStateUSDGScoreChart from "../../components/BatStateUSDGScoreChart";
@@ -9,11 +8,7 @@ import Recommender from "../../components/Recommender";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRankingStar } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-
-const groq = new Groq({
-    apiKey: "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",
-    dangerouslyAllowBrowser: true,
-});
+import Notifications from "../../components/NotificationsDropdown";
 
 const DashboardPage = () => {
     const [topCampus, setTopCampus] = useState([]);
@@ -60,27 +55,29 @@ const DashboardPage = () => {
                         />
                         Impact Ranking
                     </h1>
-
-                    {/* Step 3: Add a year selection dropdown */}
-                    <select
-                        name="year-selector"
-                        id="year-selector"
-                        className="border p-2 rounded"
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                    >
-                        <option value="">Select Year</option>
-                        {years.map((year, index) => (
-                            <option
-                                key={year}
-                                value={year}
-                                // Add a default selected year if needed
-                                selected={index === 0}
-                            >
-                                {year}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="flex gap-2">
+                        <Notifications />
+                        {/* Step 3: Add a year selection dropdown */}
+                        <select
+                            name="year-selector"
+                            id="year-selector"
+                            className="border p-2 rounded"
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                        >
+                            <option value="">Select Year</option>
+                            {years.map((year, index) => (
+                                <option
+                                    key={year}
+                                    value={year}
+                                    // Add a default selected year if needed
+                                    selected={index === 0}
+                                >
+                                    {year}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
                 <hr className="w-full border my-4" />
                 <div className="flex gap-4 mb-4">

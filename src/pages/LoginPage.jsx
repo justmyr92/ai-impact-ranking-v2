@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import loginBG from "../assets/login-cover.png";
 import { loginSubmit } from "../services/service";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const LoginPage = () => {
     const [loginCredentials, setLoginCredentials] = useState({
@@ -10,6 +12,7 @@ const LoginPage = () => {
         password: "",
     });
 
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false); // State for password visibility
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -114,32 +117,52 @@ const LoginPage = () => {
                             >
                                 Password
                             </label>
-                            <input
-                                className={`form__input border block w-full px-3 py-4 mb-1 rounded-md shadow-sm sm:text-sm focus:outline-none ${
-                                    isEmpty && loginCredentials.password === ""
-                                        ? "border-red-500 focus:border-red-500"
-                                        : "border-gray-300 focus:border-blue-500"
-                                }`}
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={loginCredentials.password}
-                                onChange={(e) =>
-                                    setLoginCredentials({
-                                        ...loginCredentials,
-                                        password: e.target.value,
-                                    })
-                                }
-                            />
+                            <div className="relative">
+                                <input
+                                    className={`form__input border block w-full px-3 py-4 mb-1 rounded-md shadow-sm sm:text-sm focus:outline-none ${
+                                        isEmpty &&
+                                        loginCredentials.password === ""
+                                            ? "border-red-500 focus:border-red-500"
+                                            : "border-gray-300 focus:border-blue-500"
+                                    }`}
+                                    type={
+                                        isPasswordVisible ? "text" : "password"
+                                    } // Toggle between password and text
+                                    id="password"
+                                    name="password"
+                                    value={loginCredentials.password}
+                                    onChange={(e) =>
+                                        setLoginCredentials({
+                                            ...loginCredentials,
+                                            password: e.target.value,
+                                        })
+                                    }
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setIsPasswordVisible(!isPasswordVisible)
+                                    } // Toggle visibility
+                                    className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-900"
+                                >
+                                    {isPasswordVisible ? (
+                                        <FontAwesomeIcon icon={faEyeSlash} />
+                                    ) : (
+                                        <FontAwesomeIcon icon={faEye} />
+                                    )}
+                                </button>
+                            </div>
                             {isEmpty && loginCredentials.password === "" ? (
                                 <p className="text-red-500 text-sm mb-1">
                                     Password is required
                                 </p>
                             ) : null}
-
-                            <p className="forgot_password underline text-red-500 text-sm cursor-pointer">
+                            <Link
+                                className="forgot_password underline text-red-500 text-sm cursor-pointer"
+                                to={"/forgot-password"}
+                            >
                                 Forgot Password?
-                            </p>
+                            </Link>
                         </div>
                         <button
                             type="submit"

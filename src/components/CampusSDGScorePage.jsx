@@ -231,16 +231,12 @@ const CampusSDGScoreChart = ({ topCampus, selectedYear }) => {
                     </div>
 
                     <BarList
-                        data={
-                            topCampuses.map((campus) => ({
-                                name: campus.name
-                                    .replace("Campus", "")
-                                    .replace("BatStateU - ", ""),
-                                value: campus.total_scores,
-                            }))
-                            // .sort((a, b) => b.value - a.value)
-                            // .slice(0, 4)
-                        }
+                        data={topCampuses.map((campus) => ({
+                            name: campus.name
+                                .replace("Campus", "")
+                                .replace("BatStateU - ", ""),
+                            value: campus.total_scores,
+                        }))}
                     />
                 </Card>
             ) : (

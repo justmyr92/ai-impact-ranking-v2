@@ -6,6 +6,7 @@ import { getAllSdOffices, validateToken } from "../../services/service";
 import AddSDOfficeModal from "../../components/AddSDOfficeModal";
 import UpdateUserModal from "../../components/UpdateUserModal"; // Import the UpdateUserModal
 import { useNavigate } from "react-router-dom";
+import Notifications from "../../components/NotificationsDropdown";
 
 const SDOfficePage = () => {
     const [sdOffice, setSdOffices] = useState([]);
@@ -92,12 +93,19 @@ const SDOfficePage = () => {
             <main className="h-full w-[80%] border overflow-auto">
                 <div className="header py-5 px-7 flex justify-between items-center">
                     <h1 className="text-2xl text-gray-900">SD Office</h1>
-                    <button
-                        className="bg-blue-600 text-white text-base px-6 py-2"
-                        onClick={() => setIsAddModalOpen(true)}
-                    >
-                        <FontAwesomeIcon icon={faSquarePlus} /> Add New Office
-                    </button>
+                    <div className="flex gap-2">
+                        {localStorage.getItem("role") === "0" && (
+                            <Notifications />
+                        )}
+
+                        <button
+                            className="bg-blue-600 text-white text-base px-6 py-2"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            <FontAwesomeIcon icon={faSquarePlus} /> Add New
+                            Office
+                        </button>
+                    </div>
                 </div>
                 <hr />
                 <div className="py-5 px-7">
