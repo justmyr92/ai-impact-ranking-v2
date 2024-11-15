@@ -53,7 +53,7 @@ const DashboardPage = () => {
                             icon={faRankingStar}
                             className="mr-2"
                         />
-                        Impact Ranking
+                        Impact Attaintment
                     </h1>
                     <div className="flex gap-2">
                         <Notifications />
