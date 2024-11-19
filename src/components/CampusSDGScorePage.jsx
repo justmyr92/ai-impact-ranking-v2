@@ -30,25 +30,86 @@ const appendRecordsToCampuses = (campuses, records, formulas) => {
     });
 };
 
+// const replaceFormulasWithValues = (data) => {
+//     return data.map((campus) => {
+//         const subIdValueMap = {};
+//         campus.items.forEach((item) => {
+//             subIdValueMap[item.sub_id] = item.value;
+//         });
+//         let total_scores = 0;
+//         const updatedFormulas = campus.formulas.map((formula) => {
+//             let formulaStr = formula.formula;
+
+//             // Find and replace sub_ids (A1, B1, etc.)
+//             formulaStr = formulaStr.replace(/([A-Z]\d+)/g, (match) => {
+//                 // if no match make it 0
+//                 // return subIdValueMap[match] || match; // Replace with value or keep sub_id if no value
+//                 return subIdValueMap[match] || 0;
+//             });
+
+//             let score = eval(excelFormula.toJavaScript(formulaStr));
+//             total_scores += score;
+
+//             return {
+//                 ...formula,
+//                 formula: formulaStr, // Update the formula with replaced values
+//                 score: score,
+//             };
+//         });
+
+//         return {
+//             ...campus,
+//             formulas: updatedFormulas, // Update formulas in the campus object
+//             total_scores: total_scores,
+//         };
+//     });
+// };
+
+// Define the safeEval function
+function safeEval(formula) {
+    try {
+        // Handle percentage notation (replace '80%' with '0.8')
+        formula = formula.replace(/(\d+)%/g, (match, p1) => parseInt(p1) / 100);
+
+        // Prevent division by zero or other invalid operations
+        formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+        // Use eval to evaluate the formula safely
+        const result = eval(formula);
+        return result;
+    } catch (error) {
+        console.error("Error evaluating formula:", error);
+        return 0; // Return 0 if there's an error
+    }
+}
+
 const replaceFormulasWithValues = (data) => {
     return data.map((campus) => {
         const subIdValueMap = {};
         campus.items.forEach((item) => {
             subIdValueMap[item.sub_id] = item.value;
         });
+
         let total_scores = 0;
         const updatedFormulas = campus.formulas.map((formula) => {
             let formulaStr = formula.formula;
 
             // Find and replace sub_ids (A1, B1, etc.)
             formulaStr = formulaStr.replace(/([A-Z]\d+)/g, (match) => {
-                // if no match make it 0
-                // return subIdValueMap[match] || match; // Replace with value or keep sub_id if no value
                 return subIdValueMap[match] || 0;
             });
 
-            let score = eval(excelFormula.toJavaScript(formulaStr));
-            total_scores += score;
+            // Use safeEval instead of eval
+            let score = safeEval(excelFormula.toJavaScript(formulaStr));
+
+            console.log(score, "asjj");
+
+            if (isNaN(score) || score === undefined) {
+                console.error("Score is NaN for formula:", formulaStr);
+                score = 0; // Default to 0 if invalid
+            }
+
+            total_scores = total_scores + score;
 
             return {
                 ...formula,
@@ -56,6 +117,8 @@ const replaceFormulasWithValues = (data) => {
                 score: score,
             };
         });
+
+        console.log("Total scores for campus:", total_scores);
 
         return {
             ...campus,
@@ -202,10 +265,6 @@ const CampusSDGScoreChart = ({ topCampus, selectedYear }) => {
             );
             setRecordScores(processedData);
             // setScores(processedData);
-            // console.log(
-            //     "Processed data after replacing formulas with values:",
-            //     processedData
-            // );
             const top4Campuses = processedData
                 .sort((a, b) => b.total_scores - a.total_scores)
                 .slice(0, 5);

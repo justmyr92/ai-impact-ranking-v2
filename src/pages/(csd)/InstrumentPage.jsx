@@ -108,7 +108,7 @@ const InstrumentsPage = () => {
         }
 
         if (userId && role === "1") {
-            navigate("/sd/impact-ranking");
+            navigate("/sd/impact-attaintment");
         }
     }, [navigate]);
 

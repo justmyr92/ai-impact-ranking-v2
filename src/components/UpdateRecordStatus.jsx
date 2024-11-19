@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import excelFormula from "excel-formula";
+import emailjs from "@emailjs/browser";
 
 const UpdateRecordStatus = ({
     selectedSdg,
@@ -316,16 +317,40 @@ const UpdateRecordStatus = ({
                 });
             };
 
-            // Apply replacement to each unique formula
+            // Define the safeEval function to safely evaluate formulas
+            function safeEval(formula) {
+                try {
+                    // Handle percentage notation (replace '80%' with '0.8')
+                    formula = formula.replace(
+                        /(\d+)%/g,
+                        (match, p1) => parseInt(p1) / 100
+                    );
+
+                    // Prevent division by zero or other invalid operations
+                    formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+                    // Use eval to evaluate the formula (ensure it's safe for use)
+                    return eval(formula) || 0;
+                } catch (error) {
+                    console.error("Error evaluating formula:", error);
+                    return 0; // Default return value in case of error
+                }
+            }
+
+            // Now, use safeEval in your map function
             const updatedFormulasV = uniqueFormulas.map((formulaObj) => {
                 const updatedFormula = replaceFormulaValues(
                     formulaObj.formula,
                     valueMap
                 );
+
+                // Convert the updatedFormula using safeEval
+                console.log(excelFormula.toJavaScript(updatedFormula));
+
                 return {
                     ...formulaObj,
                     formula: updatedFormula,
-                    score: eval(excelFormula.toJavaScript(updatedFormula)),
+                    score: safeEval(excelFormula.toJavaScript(updatedFormula)), // Use safeEval here
                 };
             });
 
@@ -361,11 +386,123 @@ const UpdateRecordStatus = ({
                     body: JSON.stringify(payload),
                 }
             );
+            const userName = localStorage.getItem("name");
 
             if (!response.ok) {
                 throw new Error(
                     `Error: ${response.status} ${response.statusText}`
                 );
+            } else {
+                try {
+                    const getStatusMessage = (status) => {
+                        switch (status) {
+                            case 1:
+                                return `
+                                    ==============================
+                                    RECORD SUBMISSION NOTIFICATION
+                                    ==============================
+                    
+                                    Hello,
+                    
+                                    An existing record has been marked as "To be Approved" by ${userName}.
+                    
+                                    Record Details:
+                                    ---------------
+                                    - Record ID: ${recordId}
+                    
+                                    Please review and take the necessary action.
+                    
+                                    Thank you,
+                                    CSDO
+                                `;
+                            case 2:
+                                return `
+                                    ==============================
+                                    RECORD REVISION NOTIFICATION
+                                    ==============================
+                    
+                                    Hello,
+                    
+                                    An existing record has been marked as "To be Revised" by ${userName}.
+                    
+                                    Record Details:
+                                    ---------------
+                                    - Record ID: ${recordId}
+                    
+                                    Please make the required changes to the record.
+                    
+                                    Thank you,
+                                    CSDO
+                                `;
+                            case 3:
+                                return `
+                                    ==============================
+                                    RECORD APPROVAL NOTIFICATION
+                                    ==============================
+                    
+                                    Hello,
+                    
+                                    An existing record has been marked as "Approved" by ${userName}.
+                    
+                                    Record Details:
+                                    ---------------
+                                    - Record ID: ${recordId}
+                    
+                                    This record is now considered finalized.
+                    
+                                    Thank you,
+                                    SDO
+                                `;
+                            default:
+                                return `
+                                    ==============================
+                                    RECORD STATUS UPDATE
+                                    ==============================
+                    
+                                    Hello,
+                    
+                                    The status of an existing record has been updated by ${userName}.
+                    
+                                    Record Details:
+                                    ---------------
+                                    - Record ID: ${recordId}
+                    
+                                    Please check the record for further details.
+                    
+                                    Thank you,
+                                    CSDO
+                                `;
+                        }
+                    };
+
+                    const message = getStatusMessage(status);
+
+                    await emailjs.send(
+                        "service_84tcmsn",
+                        "template_oj00ezl",
+                        {
+                            to_email: "justmyrgutierrez92@gmail.com",
+                            subject: "Record Submission Notification",
+                            message,
+                        },
+                        "F6fJuRNFyTkkvDqbm"
+                    );
+
+                    const notifResponse = await fetch(
+                        "http://localhost:9000/api/csd/create-notification",
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                userId: localStorage.getItem("user_id"), // User ID from localStorage
+                                notificationMessage: message,
+                            }),
+                        }
+                    );
+                    console.log("Email sent successfully.");
+                } catch (emailError) {
+                    console.error("Error sending email:", emailError);
+                }
             }
 
             const result = await response.json();
@@ -377,10 +514,6 @@ const UpdateRecordStatus = ({
             setError("An error occurred while updating the status.");
         }
     };
-
-    useEffect(() => {
-        console.log(instruments, "instrument");
-    }, [instruments]);
 
     const [role, setRole] = useState(null);
 

@@ -25,10 +25,30 @@ const processFormulas = (records) => {
         if (sdgRecord.data.length === 0) {
             return sdgRecord;
         }
+        console.log("aaaa,");
 
         const uniqueSectionIds = new Set();
         const updatedFormulas = [];
         let total_score = 0;
+
+        function safeEval(formula) {
+            try {
+                // Handle percentage notation (replace '80%' with '0.8')
+                formula = formula.replace(
+                    /(\d+)%/g,
+                    (match, p1) => parseInt(p1) / 100
+                );
+
+                // Prevent division by zero or other invalid operations
+                formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+                // Use eval to evaluate the formula safely
+                return eval(formula); // Ensure the formula is evaluated safely
+            } catch (error) {
+                console.error("Error evaluating formula:", error);
+                return 0; // Return 0 if there's an error
+            }
+        }
 
         sdgRecord.formulas.forEach((formulaItem) => {
             if (!uniqueSectionIds.has(formulaItem.section_id)) {
@@ -36,8 +56,14 @@ const processFormulas = (records) => {
                     formulaItem.formula,
                     sdgRecord.data
                 );
-                let score = eval(excelFormula.toJavaScript(updatedFormula));
-                total_score += score;
+
+                let score = safeEval(excelFormula.toJavaScript(updatedFormula));
+                console.log(score, "aaaa score");
+
+                if (score >= 0 && score <= 1000) {
+                    total_score = total_score + score;
+                }
+                console.log(total_score, "total");
                 updatedFormulas.push({
                     ...formulaItem,
                     processed: updatedFormula,
@@ -53,6 +79,7 @@ const processFormulas = (records) => {
             total_score: total_score,
         };
     });
+    console.log(updatedRecords, "Aaaaa");
 
     return updatedRecords;
 };
@@ -142,6 +169,30 @@ const Recommender = ({ selectedYear }) => {
         },
     ]);
     const [selectedSdG, setSelectedSdg] = useState("SDG01");
+
+    const generatePrompt = (campusName, record) => `
+    For campus: ${campusName}, analyze the following SDG: ${record.sdg_no}.
+    The total score is ${record.total_score}.
+    Sections: ${record.section_content.join(", ")}.
+    Provide:
+     "<div class='border border-red-500 p-5 text-sm rounded-lg shadow-md'>
+                            <h2 class='text-xl font-bold text-gray-800 mb-4'>Insights</h2>
+                            <ul class='list-disc list-inside text-gray-700'>
+                                <li>Insight 1</li>
+                                <li>Insight 2</li>
+                                <li>Insight 3</li>
+                            </ul>
+                        </div>
+     "<div class='border border-red-500 p-5 text-sm rounded-lg shadow-md mt-10'>
+                            <h2 class='text-2xl font-bold text-blue-800 mb-4'>Recommendations</h2>
+                            <ul class='list-disc list-inside text-blue-700'>
+                                <li>Recommendation 1</li>
+                                <li>Recommendation 2</li>
+                                <li>Recommendation 3</li>
+                            </ul>
+                        </div>"
+    Return response as an ordered list in HTML with line breaks after </li>.
+`;
     const fetchRecommendations = async (score, sdg_id) => {
         if (score) {
             // Collect SDGs with total scores below 100
@@ -154,34 +205,25 @@ const Recommender = ({ selectedYear }) => {
 
             // Loop through each SDG and fetch recommendations
             for (const record of sdgsWithLowScores) {
-                // const prompt = `For campus: ${
-                //     score.campus_name
-                // }, analyze the following SDG: ${
-                //     record.sdg_no
-                // }. The total score is ${
-                //     record.total_score
-                // }. Here are the relevant sections: ${record.section_content.join(
-                //     ", "
-                // )}. Provide detailed short analysis and 3 recommendations for improvement in paragraph and return in html as ordered list and add break line in every close of li tag.`;
-                //
-                const prompt = `For campus: ${
-                    score.campus_name
-                }, analyze the following SDG: ${
-                    record.sdg_no
-                }. The total score is ${
-                    record.total_score
-                }. Here are the relevant sections: ${record.section_content.join(
-                    ", "
-                )}.
-Return your response in the following format:
-1. Analysis:
-   1) Explanation of the SDG focus and current challenges.
-2. Insights:
-   1) Summary of key insights from the data.
-3. Recommendations:
-   1) Provide three actionable recommendations for improvement.
+                const prompt = generatePrompt(score.campus_name, record);
+                //                 const prompt = `For campus: ${
+                //                     score.campus_name
+                //                 }, analyze the following SDG: ${
+                //                     record.sdg_no
+                //                 }. The total score is ${
+                //                     record.total_score
+                //                 }. Here are the relevant sections: ${record.section_content.join(
+                //                     ", "
+                //                 )}.
+                // Return your response in the following format:
+                // 1. Analysis:
+                //    1) Explanation of the SDG focus and current challenges.
+                // 2. Insights:
+                //    1) Summary of key insights from the data.
+                // 3. Recommendations:
+                //    1) Provide three actionable recommendations for improvement.
 
-Return the answer in HTML as an ordered list. Add a line break after each </li> for readability.`;
+                // Return the answer in HTML as an ordered list. Add a line break after each </li> for readability.`;
 
                 try {
                     const chatCompletion = await groq.chat.completions.create({
@@ -228,7 +270,7 @@ Return the answer in HTML as an ordered list. Add a line break after each </li> 
             };
             getRecommendations(); // Call the async function
         }
-    }, [scores, selectedSdG]);
+    }, [scores, selectedSdG, selectedCampus]);
 
     useEffect(() => {
         const fetchRecordsAndFormulas = async () => {
@@ -238,6 +280,7 @@ Return the answer in HTML as an ordered list. Add a line break after each </li> 
                 );
                 const recordsData = await response.json();
 
+                console.log(recordsData, "aaaaaaaaa");
                 const uniqueSectionIds = [
                     ...new Set(recordsData.map((item) => item.section_id)),
                 ];
@@ -245,6 +288,8 @@ Return the answer in HTML as an ordered list. Add a line break after each </li> 
                 const section_content = [
                     ...new Set(recordsData.map((item) => item.section_content)),
                 ];
+
+                console.log(uniqueSectionIds, "aaa");
 
                 const getUniqueSectionContents = (data) => {
                     const uniqueSections = new Set();
@@ -301,6 +346,7 @@ Return the answer in HTML as an ordered list. Add a line break after each </li> 
                     }
                 });
 
+                console.log(finalRecords, "aaaaaaaaaaa final");
                 setScores({
                     campus: selectedCampus,
                     campus_name: campuses.find(
@@ -313,10 +359,8 @@ Return the answer in HTML as an ordered list. Add a line break after each </li> 
             }
         };
 
-        if (selectedCampus) {
-            fetchRecordsAndFormulas();
-        }
-    }, [selectedCampus, selectedYear]);
+        fetchRecordsAndFormulas();
+    }, [selectedYear]);
 
     useEffect(() => {
         const fetchCampuses = async () => {

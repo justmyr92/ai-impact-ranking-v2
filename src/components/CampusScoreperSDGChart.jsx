@@ -34,8 +34,77 @@ const processFormulas = (records) => {
         const uniqueSectionIds = new Set();
         const updatedFormulas = [];
 
+        // let total_score = 0;
+        // // Process each formula by replacing placeholders with corresponding values
+        // // Define the safeEval function
+        // function safeEval(formula) {
+        //     try {
+        //         // Handle percentage notation (replace '80%' with '0.8')
+        //         formula = formula.replace(
+        //             /(\d+)%/g,
+        //             (match, p1) => parseInt(p1) / 100
+        //         );
+
+        //         // Prevent division by zero or other invalid operations
+        //         formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+        //         // Use eval to evaluate the formula safely
+        //         return eval(formula); // Ensure the formula is evaluated safely
+        //     } catch (error) {
+        //         console.error("Error evaluating formula:", error);
+        //         return 0; // Return 0 if there's an error
+        //     }
+        // }
+
+        // // Loop through the formulas
+        // sdgRecord.formulas.forEach((formulaItem) => {
+        //     if (!uniqueSectionIds.has(formulaItem.section_id)) {
+        //         // Replace placeholders in the formula
+        //         const updatedFormula = replacePlaceholders(
+        //             formulaItem.formula,
+        //             sdgRecord.data
+        //         );
+
+        //         // Use safeEval to evaluate the formula
+        //         let score = safeEval(excelFormula.toJavaScript(updatedFormula));
+        //         total_score = total_score + score;
+
+        //         updatedFormulas.push({
+        //             ...formulaItem,
+        //             processed: updatedFormula,
+        //             score: score,
+        //         });
+
+        //         uniqueSectionIds.add(formulaItem.section_id); // Mark section_id as seen
+        //     }
+        // });
+
         let total_score = 0;
-        // Process each formula by replacing placeholders with corresponding values
+
+        // Define the safeEval function
+        function safeEval(formula) {
+            try {
+                // Handle percentage notation (replace '80%' with '0.8')
+                formula = formula.replace(
+                    /(\d+)%/g,
+                    (match, p1) => parseInt(p1) / 100
+                );
+
+                // Prevent division by zero or other invalid operations
+                formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+                // Use eval to evaluate the formula safely
+                const result = eval(formula); // Ensure the formula is evaluated safely
+
+                // Return the result or 0 if it's not a valid number
+                return isNaN(result) ? 0 : result;
+            } catch (error) {
+                console.error("Error evaluating formula:", error);
+                return 0; // Return 0 if there's an error
+            }
+        }
+
+        // Loop through the formulas
         sdgRecord.formulas.forEach((formulaItem) => {
             if (!uniqueSectionIds.has(formulaItem.section_id)) {
                 // Replace placeholders in the formula
@@ -43,17 +112,29 @@ const processFormulas = (records) => {
                     formulaItem.formula,
                     sdgRecord.data
                 );
-                // Add the updated formula to the list and mark section_id as seen
-                let score = eval(excelFormula.toJavaScript(updatedFormula));
+
+                // Check the updated formula before evaluation for debugging
+                console.log("Updated Formula:", updatedFormula);
+
+                // Use safeEval to evaluate the formula
+                let score = safeEval(excelFormula.toJavaScript(updatedFormula));
+
+                // Check score value after evaluation for debugging
+                console.log("Evaluated Score:", score);
+
                 total_score = total_score + score;
+
                 updatedFormulas.push({
                     ...formulaItem,
                     processed: updatedFormula,
                     score: score,
                 });
+
                 uniqueSectionIds.add(formulaItem.section_id); // Mark section_id as seen
             }
         });
+
+        console.log("Total Score:", total_score);
 
         // Return the SDG record with updated formulas
         return {
@@ -225,7 +306,7 @@ const CampusScoreperSDGChart = ({ selectedYear }) => {
 
                 // Add the filled records to the result
                 result.records = processFormulas(finalRecords);
-
+                console.log("aa", result.records, finalRecords);
                 // Final structured result
                 console.log(result);
                 setScores(result);

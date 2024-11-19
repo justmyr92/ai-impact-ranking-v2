@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import excelFormula from "excel-formula";
+import emailjs from "@emailjs/browser";
 
-const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
+const UpdateRecordForm = ({ selectedSdg, selectedYear, recordId }) => {
     const [instruments, setInstruments] = useState([]);
     const [answers, setAnswers] = useState([]);
     const [error, setError] = useState("");
@@ -310,16 +311,40 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
                 });
             };
 
-            // Apply replacement to each unique formula
+            // Define the safeEval function to safely evaluate formulas
+            function safeEval(formula) {
+                try {
+                    // Handle percentage notation (replace '80%' with '0.8')
+                    formula = formula.replace(
+                        /(\d+)%/g,
+                        (match, p1) => parseInt(p1) / 100
+                    );
+
+                    // Prevent division by zero or other invalid operations
+                    formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+                    // Use eval to evaluate the formula (ensure it's safe for use)
+                    return eval(formula) || 0;
+                } catch (error) {
+                    console.error("Error evaluating formula:", error);
+                    return 0; // Default return value in case of error
+                }
+            }
+
+            // Now, use safeEval in your map function
             const updatedFormulasV = uniqueFormulas.map((formulaObj) => {
                 const updatedFormula = replaceFormulaValues(
                     formulaObj.formula,
                     valueMap
                 );
+
+                // Convert the updatedFormula using safeEval
+                console.log(excelFormula.toJavaScript(updatedFormula));
+
                 return {
                     ...formulaObj,
                     formula: updatedFormula,
-                    score: eval(excelFormula.toJavaScript(updatedFormula)),
+                    score: safeEval(excelFormula.toJavaScript(updatedFormula)), // Use safeEval here
                 };
             });
 
@@ -356,7 +381,7 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
             // Wait for all updates to complete
             const updatedAnswers = await Promise.all(updatePromises);
             console.log("Updated answers:", updatedAnswers);
-
+            const userName = localStorage.getItem("name");
             // Send email notification
             try {
                 await emailjs.send(
@@ -372,7 +397,7 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
     
                             Hello,
     
-                            A new record has been successfully submitted by ${userName}.
+                            An existing record has been successfully updated by ${userName}.
     
                             Record Details:
                             ---------------
@@ -390,12 +415,12 @@ const UpdateRecordForm = ({ selectedSdg, selectedYear, c }) => {
             }
 
             // Proceed to send answers using the record_id
-            const res = await sendAnswers(record.record_id);
-            if (!res) throw new Error("Failed to send answers.");
+            //    const res = await sendAnswers(record.record_id);
+            //     if  (!res) throw new Error("Failed to send answers.");
 
             const notificationMessage = `
                 New record submission:
-                - Record ID: ${recordID}
+                - Record ID: ${recordId}
                 - Submitted by: ${userName}
             `;
 

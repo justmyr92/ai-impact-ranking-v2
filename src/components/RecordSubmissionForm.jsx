@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import excelFormula from "excel-formula";
 import emailjs from "@emailjs/browser";
+import { evaluate } from "mathjs";
 
 const RecordSubmissionForm = ({ selectedSdg, selectedYear, userId }) => {
     const [instruments, setInstruments] = useState([]);
@@ -319,19 +320,65 @@ const RecordSubmissionForm = ({ selectedSdg, selectedYear, userId }) => {
             };
 
             // Apply replacement to each unique formula
+            // const updatedFormulasV = uniqueFormulas.map((formulaObj) => {
+            //     const updatedFormula = replaceFormulaValues(
+            //         formulaObj.formula,
+            //         valueMap
+            //     );
+
+            //     // console.log(
+            //     //     eval(excelFormula.toJavaScript(updatedFormula)),
+            //     //     "Asdasaaaaaaa"
+            //     // );
+
+            //     console.log(excelFormula.toJavaScript(updatedFormula));
+
+            //     return {
+            //         ...formulaObj,
+            //         formula: updatedFormula,
+            //         // score: eval(excelFormula.toJavaScript(updatedFormula)) || 0,
+            //         score: 0,
+            //     };
+            // });
+
+            // Define the safeEval function to safely evaluate formulas
+            function safeEval(formula) {
+                try {
+                    // Handle percentage notation (replace '80%' with '0.8')
+                    formula = formula.replace(
+                        /(\d+)%/g,
+                        (match, p1) => parseInt(p1) / 100
+                    );
+
+                    // Prevent division by zero or other invalid operations
+                    formula = formula.replace(/(\/\s*0)/g, "/1"); // Avoid division by zero
+
+                    // Use eval to evaluate the formula (ensure it's safe for use)
+                    return eval(formula) || 0;
+                } catch (error) {
+                    console.error("Error evaluating formula:", error);
+                    return 0; // Default return value in case of error
+                }
+            }
+
+            // Now, use safeEval in your map function
             const updatedFormulasV = uniqueFormulas.map((formulaObj) => {
                 const updatedFormula = replaceFormulaValues(
                     formulaObj.formula,
                     valueMap
                 );
+
+                // Convert the updatedFormula using safeEval
+                console.log(excelFormula.toJavaScript(updatedFormula));
+
                 return {
                     ...formulaObj,
                     formula: updatedFormula,
-                    score: eval(excelFormula.toJavaScript(updatedFormula)),
+                    score: safeEval(excelFormula.toJavaScript(updatedFormula)), // Use safeEval here
                 };
             });
 
-            setUpdatedFormulas(updatedFormulasV); // Log the updated formulas with replaced values
+            setUpdatedFormulas(updatedFormulasV);
         }
     }, [sumByQuestionID, formulas]);
 

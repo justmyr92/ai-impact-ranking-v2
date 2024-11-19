@@ -1,7 +1,6 @@
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 // Function to fetch notifications from the backend
 const fetchNotifications = async (userId) => {

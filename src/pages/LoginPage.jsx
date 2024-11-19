@@ -20,9 +20,9 @@ const LoginPage = () => {
         const role = localStorage.getItem("role");
 
         if (userId && role === "0") {
-            navigate("/csd/impact-ranking");
+            navigate("/csd/impact-attaintment");
         } else if (userId && role === "1") {
-            navigate("/sd/impact-ranking");
+            navigate("/sd/impact-attaintment");
         }
     }, [navigate]);
 
@@ -56,9 +56,9 @@ const LoginPage = () => {
                 localStorage.setItem("name", loginResponse.name);
 
                 if (loginResponse.role === 0) {
-                    window.location.href = "/csd/impact-ranking";
+                    window.location.href = "/csd/impact-attaintment";
                 } else {
-                    window.location.href = "/sd/impact-ranking";
+                    window.location.href = "/sd/impact-attaintment";
                 }
             } else {
                 setIsError(true);

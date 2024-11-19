@@ -9,7 +9,7 @@ const formulaRoutes = require("./routes/formula.routes");
 const recordsRoutes = require("./routes/records.routes");
 const forgotPasswordRoutes = require("./routes/forgot-password.routes");
 const notificationRoutes = require("./routes/notification.routes");
-const csdnotificationRoutes = require("./routes/notification.routes");
+const csdnotificationRoutes = require("./routes/csdNotif.routes");
 
 require("dotenv").config();
 

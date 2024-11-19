@@ -18,7 +18,7 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/csd/impact-ranking" element={<DashboardPage />} />
+                <Route path="/csd/impact-attaintment" element={<DashboardPage />} />
                 <Route path="/csd/sd-office" element={<SDOfficePage />} />
 
                 <Route path="/csd/instruments" element={<InstrumentsPage />} />
@@ -34,7 +34,7 @@ function App() {
                 />
                 <Route path="/" element={<Navigate to="/login" />} />
                 <Route
-                    path="/sd/impact-ranking"
+                    path="/sd/impact-attaintment"
                     element={<SDDashboardPage />}
                 />
                 <Route path="/sd/record-tracks" element={<FIleRanking />} />
